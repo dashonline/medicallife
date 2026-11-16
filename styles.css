@@ -127,8 +127,8 @@ button,select,input{font:inherit;color:inherit}
 .hbar .hb-top{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px;gap:8px}
 .hbar .hb-top em{font-style:normal;color:var(--ink-2)}
 .hbar .hb-top strong{font-variant-numeric:tabular-nums;font-weight:640;color:var(--ink-1)}
-.hbar .hb-track{height:7px;border-radius:4px;background:var(--plane);overflow:hidden}
-.hbar .hb-fill{height:100%;border-radius:4px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+.hbar .hb-track,.kpi .hb-track{height:7px;border-radius:4px;background:var(--plane);overflow:hidden}
+.hbar .hb-fill,.kpi .hb-fill{height:100%;border-radius:4px;transition:width .4s cubic-bezier(.4,0,.2,1)}
 
 /* ---------------------------------------------------------------- hero invest→receita→roas */
 .hero{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;gap:6px;align-items:stretch;margin-bottom:6px}

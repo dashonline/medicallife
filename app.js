@@ -712,6 +712,29 @@
   }
 
   /* ================================================================ VISÃO GERAL */
+  /* Agendamentos separados por tipo (pedido do Leandro 16/11/2026): 3 cards + barras por dia */
+  var AG_TYPES = [
+    { k: 'con', name: 'Consulta alergista', icon: '🩺', color: 'var(--series-1)' },
+    { k: 'vac', name: 'Vacinas marcadas', icon: '💉', color: 'var(--series-2)' },
+    { k: 'par', name: 'Médico parceiro', icon: '🤝', color: 'var(--warning)' }
+  ];
+  function agTypesHTML(ag, prev, spend) {
+    if (!ag) return '';
+    var cards = AG_TYPES.map(function (t) {
+      var v = ag[t.k] || 0, sh = div(v, ag.n), w = ok(sh) ? Math.round(sh * 100) : 0;
+      return '<div class="kpi" style="border-top:3px solid ' + t.color + '"><div class="k">' + t.icon + ' ' + t.name + '</div>' +
+        '<div class="v">' + M.int(v) + '</div>' +
+        '<div class="hb-track" style="margin-top:8px"><div class="hb-fill" style="width:' + w + '%;background:' + t.color + '"></div></div>' +
+        '<div class="d">' + miniDelta(v, prev && prev[t.k], true) + '<span>' + (ag.n ? M.pct1(sh) + ' dos agendamentos' : 'sem agendamentos') + '</span></div></div>';
+    }).join('');
+    var leg = AG_TYPES.map(function (t) { return '<span><i style="background:' + t.color + '"></i><span style="color:var(--ink-2)">' + t.name + '</span></span>'; }).join('') +
+      '<span><i style="width:15px;height:0;border-top:2px solid var(--ink-1);border-radius:0"></i><span style="color:var(--ink-2)">Total (eixo dir.)</span></span>';
+    return '<div class="panel"><h2>🗓️ Agendamentos por tipo <span style="font-weight:500;color:var(--ink-3)">— planilha da equipe, no período</span></h2>' +
+      '<p class="note"><b>' + M.int(ag.n) + ' agendamentos</b> no total · custo médio ' + M.money(div(spend, ag.n)) + ' por agendamento (a Meta não separa o gasto por tipo).</p>' +
+      '<div class="kpis">' + cards + '</div>' +
+      '<div class="legend">' + leg + '</div><div id="chAg"></div></div>';
+  }
+
   function renderOverview() {
     var from = STATE.from, to = STATE.to, len = diffDays(from, to) + 1;
     var pTo = dayAdd(from, -1), pFrom = dayAdd(pTo, -(len - 1));
@@ -764,7 +787,8 @@
     var trafficHTML =
       '<div class="panel"><div class="health" id="health">' + healthHTML + '</div></div>' +
       '<div class="hero" id="hero">' + heroHTML + '</div>' +
-      '<p class="hero-line" style="margin-bottom:10px">' + heroLine + '</p>';
+      '<p class="hero-line" style="margin-bottom:10px">' + heroLine + '</p>' +
+      agTypesHTML(ag, agInPeriod(pFrom, pTo), cur.spend);
     var funnelHTML =
       '<div class="grid-funnel">' +
       '<div class="panel"><h2>Funil completo</h2><p class="note">Investimento → Impressões → Cliques → Mensagens' + (agOn() ? ' → Agendamentos' : '') + '. Cada etapa mostra o <b>volume</b> e, à direita, o <b>custo</b> e a <b>taxa de passagem</b>.</p><div class="funnel" id="funnel"></div></div>' +
@@ -793,6 +817,10 @@
 
     if (!CLIENT) {
       renderFunnel(cur);
+      if (ag && $('chAg')) {
+        var agRows = rows.map(function (r) { var a = AG.byDay[r.d] || {}; return { d: r.d, con: a.con || 0, vac: a.vac || 0, par: a.par || 0, n: a.n || 0 }; });
+        comboChart($('chAg'), agRows, { bars: AG_TYPES.map(function (t) { return { key: t.k, color: t.color, name: t.name }; }), line: { key: 'n', color: 'var(--ink-1)', name: 'Total' }, leftFmt: M.int, rightFmt: M.int, lineFmt: M.int });
+      }
       comboChart($('chA'), rows, { bars: [{ key: 'spend', color: 'var(--critical)', name: 'Investimento c/ imposto' }], line: { key: 'msg', color: 'var(--good)', name: 'Mensagens' }, leftFmt: M.money0, rightFmt: M.int, lineFmt: M.int });
       var barsB = [{ key: 'msg', color: 'var(--good)', name: 'Mensagens' }];
       if (SHOW_LEADS) barsB.push({ key: 'lead', color: 'var(--series-2)', name: 'Leads' });
