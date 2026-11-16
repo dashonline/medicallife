@@ -571,7 +571,7 @@
   function brNum(x) { x = String(x == null ? '' : x).replace(/[^\d,.-]/g, ''); if (!x || x === '-') return 0; x = x.replace(/\./g, '').replace(',', '.'); var n = parseFloat(x); return isFinite(n) ? n : 0; }
   function agTabs() {
     var out = [], y = +AG_FIRST.slice(0, 4), m = +AG_FIRST.slice(5, 7), ly = +maxDate.slice(0, 4), lm = +maxDate.slice(5, 7);
-    while (y < ly || (y === ly && m <= lm)) { out.push({ name: AG_MES[m - 1] + '/' + y, y: y }); m++; if (m > 12) { m = 1; y++; } }
+    while (y < ly || (y === ly && m <= lm)) { out.push({ name: AG_MES[m - 1] + '/' + y, y: y, m: m }); m++; if (m > 12) { m = 1; y++; } }
     return out;
   }
   function fetchAgend() {
@@ -583,8 +583,14 @@
         var rows = parseCSV(t);
         for (var r = 1; r < rows.length; r++) {
           var v = rows[r]; if (!v) continue;
-          var m = /^(\d{1,2})\/(\d{1,2})/.exec((v[0] || '').trim()); if (!m) continue;   // pula TOTAL
-          var d = tab.y + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2);
+          // Dia da linha: usa o texto 'dd/mm' da col. A se bater com o mês da aba; senão, a POSIÇÃO da linha
+          // (linha 1 = dia 1...). Nov/2026 veio com A1='4' e datas '01/11' que o gviz converte/zera -> sem isso, mês inteiro sumia.
+          var a0 = (v[0] || '').trim();
+          if (/total/i.test(a0)) continue;
+          var dim = new Date(Date.UTC(tab.y, tab.m, 0)).getUTCDate();
+          var m = /^(\d{1,2})\/(\d{1,2})/.exec(a0), day = (m && +m[2] === tab.m) ? +m[1] : r;
+          if (day < 1 || day > dim) continue;
+          var d = tab.y + '-' + ('0' + tab.m).slice(-2) + '-' + ('0' + day).slice(-2);
           var vac = brNum(v[3]), par = brNum(v[4]), con = brNum(v[5]), mA = brNum(v[1]), mV = brNum(v[2]);
           if (!vac && !par && !con && !mA && !mV) continue;
           var o = AG.byDay[d] || (AG.byDay[d] = { n: 0, vac: 0, par: 0, con: 0, msgEq: 0 });
